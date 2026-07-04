@@ -1,0 +1,74 @@
+{
+  "tournament_id": "default-phase-0",
+  "rules": {
+    "duration_ticks": 1000,
+    "entry_deadline_seconds_before_start": 3600,
+    "minimum_participants": 2
+  },
+  "scoring": {
+    "liquidation_fee_bps": 100,
+    "delta_penalty_enabled": true
+  },
+  "markets": [
+    {
+      "symbol": "AAPL",
+      "market_type": "spot",
+      "tick_size": 1,
+      "lot_size": 1,
+      "initial_reference_price": 10000
+    }
+  ],
+  "venues": [
+    {
+      "venue_id": "VENUE_1",
+      "fee_bps": 10,
+      "spread_bps": 20,
+      "latency_ticks": 1,
+      "supported_symbols": ["AAPL"]
+    },
+    {
+      "venue_id": "VENUE_2",
+      "fee_bps": 15,
+      "spread_bps": 30,
+      "latency_ticks": 2,
+      "supported_symbols": ["AAPL"]
+    }
+  ],
+  "regimes": [
+    {
+      "name": "sideways",
+      "visible_before_tournament": true,
+      "volatility_bps": 50,
+      "liquidity_multiplier": 1.0,
+      "spread_multiplier": 1.0
+    },
+    {
+      "name": "trending",
+      "visible_before_tournament": true,
+      "volatility_bps": 80,
+      "liquidity_multiplier": 1.0,
+      "spread_multiplier": 1.1
+    },
+    {
+      "name": "high_volatility",
+      "visible_before_tournament": true,
+      "volatility_bps": 200,
+      "liquidity_multiplier": 0.8,
+      "spread_multiplier": 1.5
+    },
+    {
+      "name": "liquidity_shock",
+      "visible_before_tournament": false,
+      "volatility_bps": 150,
+      "liquidity_multiplier": 0.3,
+      "spread_multiplier": 2.0
+    },
+    {
+      "name": "black_swan",
+      "visible_before_tournament": false,
+      "volatility_bps": 500,
+      "liquidity_multiplier": 0.1,
+      "spread_multiplier": 4.0
+    }
+  ]
+}

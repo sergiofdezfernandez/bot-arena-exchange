@@ -1,7 +1,13 @@
+import time
+
+from bot_arena_exchange.application.exchange_service import ExchangeService
 from bot_arena_exchange.domain.bots import SimpleMarketMaker, RandomTrader, MeanRevertingTrader
 from bot_arena_exchange.domain.order_book import OrderBook
 from bot_arena_exchange.domain.tournament import TournamentManager
-import time
+
+
+def create_exchange_from_config(config_path):
+    return ExchangeService.from_config_file(config_path)
 
 
 def run_local_simulation(total_ticks=15):

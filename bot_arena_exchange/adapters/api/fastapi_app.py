@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -22,6 +24,13 @@ class OrderRequest(BaseModel):
     price: int
     quantity: int
     trader_id: str
+    symbol: Optional[str] = None
+    venue: Optional[str] = None
+
+
+@app.get("/config")
+def get_config():
+    return service.get_tournament_config()
 
 
 @app.get("/snapshot")
@@ -34,6 +43,16 @@ def get_traders_status():
     return service.get_traders_status()
 
 
+@app.get("/events")
+def get_events():
+    return service.get_event_log()
+
+
+@app.get("/scores")
+def get_scores():
+    return service.score_traders()
+
+
 @app.post("/order")
 def place_market_order(order: OrderRequest):
     return service.place_order(
@@ -41,4 +60,6 @@ def place_market_order(order: OrderRequest):
         price=order.price,
         quantity=order.quantity,
         trader_id=order.trader_id,
+        symbol=order.symbol,
+        venue=order.venue,
     )
