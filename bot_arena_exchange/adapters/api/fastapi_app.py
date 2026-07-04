@@ -28,6 +28,14 @@ class OrderRequest(BaseModel):
     venue: Optional[str] = None
 
 
+class CancelOrderRequest(BaseModel):
+    trader_id: str
+
+
+class TickRequest(BaseModel):
+    ticks: int = 1
+
+
 class BotFilesRequest(BaseModel):
     files: dict[str, str]
 
@@ -38,6 +46,12 @@ class BotSubmissionRequest(BaseModel):
     files: dict[str, str]
 
 
+class TournamentEntryRequest(BaseModel):
+    owner_id: str
+    bot_name: str
+    version: int
+
+
 @app.get("/config")
 def get_config():
     return service.get_tournament_config()
@@ -46,6 +60,21 @@ def get_config():
 @app.get("/snapshot")
 def get_market_snapshot():
     return service.get_market_snapshot()
+
+
+@app.get("/market")
+def get_market_state():
+    return service.get_market_state()
+
+
+@app.get("/orders/{order_id}")
+def get_order_state(order_id: str):
+    return service.get_order_state(order_id)
+
+
+@app.get("/accounts/{trader_id}")
+def get_account_state(trader_id: str):
+    return service.get_account_state(trader_id)
 
 
 @app.get("/traders")
@@ -61,6 +90,31 @@ def get_events():
 @app.get("/scores")
 def get_scores():
     return service.score_traders()
+
+
+@app.get("/leaderboard")
+def get_leaderboard():
+    return service.get_leaderboard()
+
+
+@app.get("/tournaments")
+def list_tournaments():
+    return service.list_tournaments()
+
+
+@app.get("/tournaments/{tournament_id}")
+def get_tournament(tournament_id: str):
+    return service.get_tournament(tournament_id)
+
+
+@app.post("/tournaments/{tournament_id}/entries")
+def enter_tournament(tournament_id: str, request: TournamentEntryRequest):
+    return service.enter_tournament(tournament_id, request.owner_id, request.bot_name, request.version)
+
+
+@app.post("/tournaments/{tournament_id}/run")
+def run_tournament(tournament_id: str):
+    return service.run_scheduled_tournament(tournament_id)
 
 
 @app.get("/starter-kit")
@@ -98,3 +152,13 @@ def place_market_order(order: OrderRequest):
         symbol=order.symbol,
         venue=order.venue,
     )
+
+
+@app.post("/orders/{order_id}/cancel")
+def cancel_order(order_id: str, request: CancelOrderRequest):
+    return service.cancel_order(order_id, request.trader_id)
+
+
+@app.post("/tick")
+def advance_tick(request: TickRequest):
+    return service.advance_tick(request.ticks)
