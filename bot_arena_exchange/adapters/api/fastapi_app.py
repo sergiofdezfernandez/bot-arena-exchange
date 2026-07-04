@@ -28,6 +28,16 @@ class OrderRequest(BaseModel):
     venue: Optional[str] = None
 
 
+class BotFilesRequest(BaseModel):
+    files: dict[str, str]
+
+
+class BotSubmissionRequest(BaseModel):
+    owner_id: str
+    bot_name: str
+    files: dict[str, str]
+
+
 @app.get("/config")
 def get_config():
     return service.get_tournament_config()
@@ -51,6 +61,31 @@ def get_events():
 @app.get("/scores")
 def get_scores():
     return service.score_traders()
+
+
+@app.get("/starter-kit")
+def get_starter_kit():
+    return service.get_starter_kit()
+
+
+@app.post("/bots/validate")
+def validate_bot(request: BotFilesRequest):
+    return service.validate_bot(request.files)
+
+
+@app.post("/bots/submit")
+def submit_bot(request: BotSubmissionRequest):
+    return service.submit_bot(request.owner_id, request.bot_name, request.files)
+
+
+@app.get("/bots/{owner_id}/versions")
+def list_bot_versions(owner_id: str, bot_name: Optional[str] = None):
+    return service.list_bot_versions(owner_id, bot_name)
+
+
+@app.get("/bots/{owner_id}/{bot_name}/versions/{version}")
+def get_bot_version(owner_id: str, bot_name: str, version: int):
+    return service.get_bot_version(owner_id, bot_name, version)
 
 
 @app.post("/order")

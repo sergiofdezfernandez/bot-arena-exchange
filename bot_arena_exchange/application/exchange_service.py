@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from bot_arena_exchange.application.api_gateway import ApiGateway
+from bot_arena_exchange.application.bot_lifecycle import BotLifecycleService
 from bot_arena_exchange.application.event_log import InMemoryEventLog
 from bot_arena_exchange.config.tournament_config import DEFAULT_TOURNAMENT_CONFIG, TournamentConfig, load_tournament_config
 from bot_arena_exchange.domain.bots import SimpleMarketMaker
@@ -10,11 +11,12 @@ from bot_arena_exchange.domain.tournament import TournamentManager
 
 
 class ExchangeService:
-    def __init__(self, config=None, book=None, manager=None, event_log=None, tournament_status="RUNNING"):
+    def __init__(self, config=None, book=None, manager=None, event_log=None, bot_lifecycle=None, tournament_status="RUNNING"):
         self.config = config or DEFAULT_TOURNAMENT_CONFIG
         self.book = book or OrderBook()
         self.manager = manager or TournamentManager(position_limit=100)
         self.event_log = event_log or InMemoryEventLog()
+        self.bot_lifecycle = bot_lifecycle or BotLifecycleService()
         self.gateway = ApiGateway(self.config, self.manager)
         self.tournament_status = tournament_status
 
@@ -50,6 +52,21 @@ class ExchangeService:
 
     def get_tournament_config(self):
         return self.config
+
+    def get_starter_kit(self):
+        return self.bot_lifecycle.get_starter_kit()
+
+    def validate_bot(self, files):
+        return self.bot_lifecycle.validate_bot(files)
+
+    def submit_bot(self, owner_id, bot_name, files):
+        return self.bot_lifecycle.submit_bot(owner_id, bot_name, files)
+
+    def list_bot_versions(self, owner_id, bot_name=None):
+        return self.bot_lifecycle.list_versions(owner_id, bot_name)
+
+    def get_bot_version(self, owner_id, bot_name, version):
+        return self.bot_lifecycle.get_version(owner_id, bot_name, version)
 
     def get_market_snapshot(self):
         return self.book.get_snapshot()
