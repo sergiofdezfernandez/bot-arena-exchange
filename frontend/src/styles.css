@@ -1,156 +1,877 @@
+
+
 :root {
-  color: #dbeafe;
-  background: #08111f;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --bg-deep: #080d18;
+  --bg-panel: #0c1426;
+  --bg-card: #111c33;
+  --bg-hover: #152244;
+  --border: #1a2a4a;
+  --text-primary: #e2e8f0;
+  --text-secondary: #8899b4;
+  --text-dim: #556688;
+  --green: #22c55e;
+  --green-bg: rgba(34, 197, 94, 0.12);
+  --green-bright: #4ade80;
+  --red: #ef4444;
+  --red-bg: rgba(239, 68, 68, 0.10);
+  --red-bright: #f87171;
+  --accent: #3b82f6;
+  --accent-dim: #60a5fa;
+  --gold: #fbbf24;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * {
   box-sizing: border-box;
+  margin: 0;
 }
 
 body {
-  margin: 0;
+  font-family: var(--font-sans);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
 }
 
-button {
-  border: 0;
-  border-radius: 10px;
-  padding: 0.8rem 1rem;
-  background: #38bdf8;
-  color: #04111f;
-  cursor: pointer;
+/* ================================================================
+   APP SHELL
+   ================================================================ */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+/* ================================================================
+   TOP BAR
+   ================================================================ */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1.4rem;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.topbar-center {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ws-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.ws-live {
+  background: var(--green-bg);
+  color: var(--green-bright);
+}
+
+.ws-dead {
+  background: var(--red-bg);
+  color: var(--red-bright);
+}
+
+.ws-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s infinite;
+}
+
+.ws-dead .ws-dot {
+  background: var(--red);
+  animation: none;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
   font-weight: 700;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
+.user-name {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
 }
 
-main {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-.hero {
+/* ================================================================
+   METRICS BAR
+   ================================================================ */
+.metrics-bar {
   display: flex;
-  justify-content: space-between;
-  gap: 1.5rem;
+  gap: 0;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.metric {
+  flex: 1;
+  display: flex;
   align-items: center;
-  padding: 2rem;
-  border: 1px solid #1e3a5f;
-  border-radius: 24px;
-  background: linear-gradient(135deg, #0f2744, #0b1728 60%, #12213a);
+  gap: 0.5rem;
+  padding: 0.55rem 1.2rem;
+  border-right: 1px solid var(--border);
 }
 
-.hero h1 {
-  margin: 0.2rem 0;
-  font-size: clamp(2.2rem, 6vw, 4.5rem);
-  line-height: 0.95;
+.metric:last-child {
+  border-right: none;
 }
 
-.hero p {
-  max-width: 680px;
-  color: #a8c7ee;
-}
-
-.eyebrow {
-  margin: 0;
-  color: #38bdf8 !important;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 0.16em;
+.metric-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-dim);
   text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.cards {
-  margin: 1rem 0;
+.metric-mid {
+  color: var(--accent-dim);
 }
 
-.card,
-.panel,
-.status,
-.error {
-  border: 1px solid #1e3a5f;
-  border-radius: 18px;
-  background: #0d1b2f;
-  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.25);
+.metric-green {
+  color: var(--green-bright);
 }
 
-.card {
-  padding: 1.2rem;
+.metric-red {
+  color: var(--red-bright);
 }
 
-.card span,
-.card small {
-  display: block;
-  color: #8fb2dc;
+/* Green flash for arbitrage opportunity */
+.metric-green-flash {
+  animation: greenGlow 1.2s ease-in-out infinite alternate;
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.4);
 }
 
-.card strong {
-  display: block;
-  margin: 0.5rem 0;
-  color: #f8fafc;
-  font-size: 1.8rem;
+@keyframes greenGlow {
+  0% {
+    box-shadow: 0 0 4px rgba(34, 197, 94, 0.2);
+    background: rgba(34, 197, 94, 0.05);
+  }
+  100% {
+    box-shadow: 0 0 14px rgba(34, 197, 94, 0.6);
+    background: rgba(34, 197, 94, 0.14);
+  }
 }
 
-.panel {
-  margin: 1rem 0;
-  padding: 1.25rem;
-  overflow: auto;
+.metric-tag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.12rem 0.5rem;
+  border-radius: 3px;
+  background: var(--bg-card);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
-.panel h2 {
-  margin-top: 0;
+.tag-active {
+  background: var(--green-bg);
+  color: var(--green-bright);
 }
 
-.actions,
-.status-grid {
+/* ================================================================
+   ERROR BANNER
+   ================================================================ */
+.error-banner {
+  padding: 0.4rem 1.2rem;
+  background: #2d1015;
+  color: var(--red-bright);
+  font-size: 0.78rem;
+  border-bottom: 1px solid #4a1a1a;
+  flex-shrink: 0;
+}
+
+/* ================================================================
+   TWO-COLUMN MAIN LAYOUT
+   ================================================================ */
+.split-main {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.status {
-  flex: 1 1 280px;
-  padding: 1rem;
-  background: #0a1627;
+.left-col {
+  flex: 0 0 45%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  min-height: 0;
+  overflow: hidden;
 }
 
-table {
+.right-col {
+  flex: 1 1 55%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ================================================================
+   PANEL shared
+   ================================================================ */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.panel-header h2 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/* ================================================================
+   TRADER DETAIL PANEL (Master-Detail, replaces old PnL chart)
+   ================================================================ */
+.detail-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 auto;
+  background: var(--bg-deep);
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 130px;
+  color: var(--text-dim);
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+}
+
+/* Metric cards (PNL / SCORE / RANK) */
+.detail-cards {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.4rem 0.6rem;
+}
+
+.detail-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.45rem 0.3rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.card-positive {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.card-negative {
+  border-color: rgba(239, 68, 68, 0.25);
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.detail-card-label {
+  font-size: 0.58rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.15rem;
+}
+
+.detail-card-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.card-positive .detail-card-value {
+  color: var(--green-bright);
+}
+
+.card-negative .detail-card-value {
+  color: var(--red-bright);
+}
+
+/* Detail chart */
+.detail-chart-body {
+  padding: 0.2rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.chart-grid-line {
+  stroke: rgba(255, 255, 255, 0.04);
+  stroke-width: 1;
+}
+
+.detail-chart-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100px;
+  color: var(--text-dim);
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+}
+
+/* ================================================================
+   LEADERBOARD PANEL (with sparklines & master-detail selection)
+   ================================================================ */
+.lb-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-deep);
+}
+
+.lb-count {
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.lb-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.lb-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
 
-th,
-td {
-  padding: 0.8rem;
-  border-bottom: 1px solid #1e3a5f;
+.lb-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-panel);
+}
+
+.lb-table th {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
-th {
-  color: #93c5fd;
+.lb-table th:nth-child(3),
+.lb-table th:nth-child(4) {
+  text-align: right;
 }
 
-pre {
-  max-height: 440px;
-  overflow: auto;
-  color: #bfdbfe;
-  white-space: pre-wrap;
+.lb-table th:last-child {
+  text-align: center;
 }
 
-.error {
-  margin: 1rem 0;
-  padding: 1rem;
-  border-color: #7f1d1d;
-  background: #331217;
-  color: #fecaca;
+.lb-table td {
+  padding: 0.2rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(26, 42, 74, 0.35);
+  white-space: nowrap;
+}
+
+.lb-table td:nth-child(3),
+.lb-table td:nth-child(4) {
+  text-align: right;
+}
+
+.lb-table td:last-child {
+  text-align: center;
+}
+
+.lb-row {
+  cursor: pointer;
+  transition: background 0.25s ease;
+}
+
+.lb-row:hover {
+  background: var(--bg-hover);
+}
+
+/* Selected trader highlight */
+.lb-row-selected {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-left: 2px solid var(--accent);
+}
+
+.lb-row-selected:hover {
+  background: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Rank change flash animations */
+.rank-flash-up {
+  animation: flashUp 1s ease-out;
+}
+
+.rank-flash-down {
+  animation: flashDown 1s ease-out;
+}
+
+@keyframes flashUp {
+  0% { background: rgba(34, 197, 94, 0.2); }
+  100% { background: transparent; }
+}
+
+@keyframes flashDown {
+  0% { background: rgba(239, 68, 68, 0.2); }
+  100% { background: transparent; }
+}
+
+.lb-rank {
+  color: var(--text-dim);
+  font-weight: 600;
+  text-align: center;
+  width: 30px;
+}
+
+.lb-trader {
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pnl-positive {
+  color: var(--green-bright);
+  font-weight: 500;
+}
+
+.pnl-negative {
+  color: var(--red-bright);
+  font-weight: 500;
+}
+
+.lb-score {
+  color: var(--text-secondary);
+}
+
+/* Sparkline cell */
+.lb-spark {
+  width: 75px;
+  padding: 0.1rem 0.2rem !important;
+  vertical-align: middle;
+}
+
+.spark-svg {
+  display: block;
+  width: 70px;
+  height: 20px;
+}
+
+.lb-empty {
+  text-align: center !important;
+  color: var(--text-dim);
+  padding: 2rem 0.5rem !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.75rem !important;
+}
+
+/* ================================================================
+   ORDER BOOK PANEL (right column, top)
+   ================================================================ */
+/* Dual order book container */
+.ob-dual-container {
+  display: flex;
+  flex: 1 1 50%;
+  min-height: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.ob-panel {
+  flex: 1 1 50%;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-deep);
+}
+
+/* Within the dual container, each panel gets half width and no bottom border */
+.ob-panel-dual {
+  flex: 1;
+  min-width: 0;
+  border-bottom: none;
+  border-right: 1px solid var(--border);
+}
+
+.ob-panel-dual:last-child {
+  border-right: none;
+}
+
+.spread-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  padding: 0.12rem 0.5rem;
+  background: var(--bg-card);
+  border-radius: 3px;
+}
+
+.ob-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ob-table thead {
+  background: var(--bg-panel);
+}
+
+.ob-table th {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  text-align: right;
+}
+
+.ob-table th:first-child { text-align: left; }
+.ob-table th:last-child { text-align: left; }
+
+.ob-table td {
+  padding: 0.1rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  border-bottom: 1px solid rgba(26, 42, 74, 0.4);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ob-table td:first-child { text-align: left; }
+.ob-table td:last-child { text-align: left; }
+
+.ob-table tbody {
+  display: block;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+}
+
+.ob-table thead,
+.ob-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.ob-price-ask {
+  color: var(--red-bright);
+  font-weight: 500;
+}
+
+.ob-price-bid {
+  color: var(--green-bright);
+  font-weight: 500;
+}
+
+.ob-row-ask {
+  background: rgba(239, 68, 68, 0.02);
+}
+
+.ob-row-bid {
+  background: rgba(34, 197, 94, 0.02);
+}
+
+.ob-row:hover {
+  background: var(--bg-hover) !important;
+}
+
+/* Depth bars */
+.ob-depth-cell {
+  position: relative;
+  padding: 0 !important;
+  height: 100%;
+  min-width: 60px;
+}
+
+.ob-depth-bar {
+  height: 100%;
+  min-height: 16px;
+  opacity: 0.18;
+  transition: width 0.2s ease;
+}
+
+.ob-depth-ask {
+  background: var(--red);
+  float: right;
+  border-radius: 0 2px 2px 0;
+}
+
+.ob-depth-bid {
+  background: var(--green);
+  float: left;
+  border-radius: 2px 0 0 2px;
+}
+
+/* Spread row */
+.ob-spread-row td {
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+}
+
+.ob-spread-cell {
+  font-family: var(--font-mono) !important;
+  font-size: 0.65rem !important;
+  color: var(--gold) !important;
+  text-align: center !important;
+  font-weight: 500;
+}
+
+.ob-empty {
+  text-align: center !important;
+  color: var(--text-dim);
+  padding: 2rem 0.5rem !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.75rem !important;
+}
+
+/* ================================================================
+   COMPACT RECENT TRADES PANEL (right column, bottom)
+   ================================================================ */
+.ct-panel {
+  flex: 1 1 50%;
+  background: var(--bg-deep);
+}
+
+.ct-count {
+  font-size: 0.64rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+
+.ct-table-wrap {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.ct-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.ct-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-panel);
+}
+
+.ct-table th {
+  padding: 0.3rem 0.5rem;
+  font-size: 0.6rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.ct-table th:nth-child(2),
+.ct-table th:nth-child(3) {
+  text-align: right;
+}
+
+.ct-table td {
+  padding: 0.14rem 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  border-bottom: 1px solid rgba(26, 42, 74, 0.35);
+  white-space: nowrap;
+}
+
+.ct-table td:nth-child(2),
+.ct-table td:nth-child(3) {
+  text-align: right;
+}
+
+.ct-row:hover {
+  background: var(--bg-hover);
+}
+
+.ct-time {
+  color: var(--text-dim);
+  font-size: 0.62rem;
+}
+
+.ct-price {
+  font-weight: 600;
+}
+
+.ct-qty {
+  color: var(--text-primary);
+}
+
+.ct-trader {
+  color: var(--text-secondary);
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rt-arrow {
+  font-size: 0.6rem;
+  margin-right: 0.15rem;
+}
+
+.trade-up {
+  color: var(--green-bright);
+}
+
+.trade-down {
+  color: var(--red-bright);
+}
+
+.bot-highlight {
+  color: var(--accent-dim);
+  font-weight: 500;
+}
+
+/* Venue badges for trades table */
+.ct-venue {
+  text-align: center !important;
+  padding: 0.14rem 0.25rem !important;
+  width: 38px;
+}
+
+.venue-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.58rem;
+  font-weight: 700;
+  padding: 0.08rem 0.35rem;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.venue-v1 {
+  background: rgba(59, 130, 246, 0.18);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.venue-v2 {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fb923c;
+  border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+.ct-empty {
+  text-align: center !important;
+  color: var(--text-dim);
+  padding: 1.5rem 0.5rem !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.72rem !important;
+}
+
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
 }
