@@ -26,21 +26,9 @@ class RandomTrader:
         self.trader_id = trader_id
         self.symbol = symbol
         self.venue = venue
+        self.last_order_id = None  # Tracked for cancellation by LiquidityEngine
 
-    def generate_random_order(self) -> dict:
-        """
-        Generates a random order with a random side, price, and quantity.
-        """
-        side = random.choice(["BUY", "SELL"])
-        price = random.randint(90, 110)  # Random price between 90 and 110
-        quantity = random.randint(1, 10)  # Random quantity between 1 and 10
-
-        return {
-            "side": side,
-            "price": price,
-            "quantity": quantity
-        }
-
+    
     def think(self, best_bid: Optional[int], best_ask: Optional[int]) -> Optional[dict]:
         """
         Decide whether to send an order based on visible top-of-book.
@@ -67,7 +55,7 @@ class RandomTrader:
                 mid = (best_bid + best_ask) // 2
                 price = mid + (1 if side == "BUY" else -1)
 
-        quantity = random.randint(10,50)
+        quantity = random.randint(10,100)
         return {"side": side, "price": price, "quantity": quantity}
 
 class MeanRevertingTrader:
@@ -76,6 +64,7 @@ class MeanRevertingTrader:
         self.symbol = symbol
         self.venue = venue
         self.prices_seen = []
+        self.last_order_id = None  # Tracked for cancellation by LiquidityEngine
 
     def think(self, best_bid: Optional[int], best_ask: Optional[int]) -> Optional[dict]:
         """
@@ -88,17 +77,14 @@ class MeanRevertingTrader:
         mid_price = (best_bid + best_ask) // 2
         self.prices_seen.append(mid_price)
 
-        # Keep only the last 10 prices for mean calculation
-        if len(self.prices_seen) > 10:
-            self.prices_seen.pop(0)
+        
 
-        mean_price = sum(self.prices_seen) / len(self.prices_seen)
+        mean_price = 10000
 
-        # If current mid price is above mean, consider selling; below mean, consider buying
-        if mid_price > mean_price + 1:
+        if mid_price > mean_price:
             side = "SELL"
             price = best_bid  # Take the bid
-        elif mid_price < mean_price - 1:
+        elif mid_price < mean_price :
             side = "BUY"
             price = best_ask  # Take the ask
         else:
