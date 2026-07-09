@@ -56,12 +56,15 @@ class ApiGateway:
             return GatewayValidationResult(False, "quantity does not match lot size")
 
         account = self.manager.get_account(trader_id)
-        if account.status != "ACTIVE":
-            return GatewayValidationResult(False, "trader account is not active")
 
-        current_position = account.positions.get(symbol, 0)
-        signed_quantity = quantity if side == "BUY" else -quantity
-        if abs(current_position + signed_quantity) > self.manager.position_limit:
-            return GatewayValidationResult(False, "position limit would be exceeded")
+        # System accounts bypass all account status and position limit checks
+        if not account.is_system:
+            if account.status != "ACTIVE":
+                return GatewayValidationResult(False, "trader account is not active")
+
+            current_position = account.positions.get(symbol, 0)
+            signed_quantity = quantity if side == "BUY" else -quantity
+            if abs(current_position + signed_quantity) > self.manager.position_limit:
+                return GatewayValidationResult(False, "position limit would be exceeded")
 
         return GatewayValidationResult(True)
