@@ -1,6 +1,6 @@
 import pytest
 
-from bot_arena_exchange.domain.order_book import OrderBook
+from bot_arena_exchange.domain.order_book import OrderBook, WashTradeError
 
 
 class TestOrderBookMassiveTestSuite:
@@ -258,11 +258,24 @@ class TestOrderBookMassiveTestSuite:
         assert self.book.best_ask() == 101
         assert len(self.book.get_trades()) == 0
 
-    def test_trader_trades_with_self_multiple_times(self):
+    def test_self_matching_blocked_raises_wash_trade_error(self):
+        """Self-matching is now banned — crossing your own order raises WashTradeError."""
         self.book.place_order("BUY", 100, 5, "trader_A")
-        self.book.place_order("SELL", 100, 10, "trader_A")
-        assert len(self.book.get_trades()) == 1
-        assert self.book.get_snapshot()["asks"][0]["quantity"] == 5
+        with pytest.raises(WashTradeError) as exc_info:
+            self.book.place_order("SELL", 100, 10, "trader_A")
+        assert exc_info.value.trader_id == "trader_A"
+        # The resting BUY order must still be intact on the book
+        assert self.book.best_bid() == 100
+        assert self.book.get_snapshot()["bids"][0]["quantity"] == 5
+        assert len(self.book.get_trades()) == 0
+
+    def test_self_matching_can_be_disabled(self):
+        """When self_matching_banned=False, wash trading is allowed again."""
+        permissive_book = OrderBook(self_matching_banned=False)
+        permissive_book.place_order("BUY", 100, 5, "trader_A")
+        permissive_book.place_order("SELL", 100, 10, "trader_A")
+        assert len(permissive_book.get_trades()) == 1
+        assert permissive_book.get_snapshot()["asks"][0]["quantity"] == 5
 
     # ==========================================
     # GROUP 5: QUERIES AND EDGE CASES (8 tests)

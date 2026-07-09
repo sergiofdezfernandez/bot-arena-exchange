@@ -1,3 +1,4 @@
+import asyncio
 import json
 
 import pytest
@@ -6,6 +7,17 @@ from bot_arena_exchange.adapters.cli.local_simulation import create_exchange_fro
 from bot_arena_exchange.application.exchange_service import ExchangeService
 from bot_arena_exchange.config.tournament_config import DEFAULT_TOURNAMENT_CONFIG, TournamentConfig, load_tournament_config
 from bot_arena_exchange.domain.scoring import calculate_delta_liquidation_penalty
+
+
+def _run(coro):
+    """Helper to run an async coroutine synchronously in tests."""
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coro)
+    import nest_asyncio
+    nest_asyncio.apply()
+    return loop.run_until_complete(coro)
 
 
 def test_default_tournament_config_has_phase_zero_rules():
@@ -70,7 +82,10 @@ def test_config_rejects_venue_with_unsupported_symbol():
 def test_gateway_rejects_invalid_request_and_records_event():
     service = ExchangeService()
 
-    result = service.place_order("BUY", 10000, 10, "Trader_1", symbol="MSFT", venue="VENUE_1")
+    async def run():
+        return await service.place_order("BUY", 10000, 10, "Trader_1", symbol="MSFT", venue="VENUE_1")
+
+    result = _run(run())
 
     assert result["status"] == "REJECTED"
     assert result["reason"] == "unsupported symbol"
@@ -81,7 +96,10 @@ def test_gateway_rejects_invalid_request_and_records_event():
 def test_gateway_accepts_valid_request_and_records_event():
     service = ExchangeService()
 
-    result = service.place_order("BUY", 10000, 10, "Trader_1", symbol="AAPL", venue="VENUE_1")
+    async def run():
+        return await service.place_order("BUY", 10000, 10, "Trader_1", symbol="AAPL", venue="VENUE_1")
+
+    result = _run(run())
 
     assert result["status"] == "PROCESSED"
     assert result["order_id"]
@@ -92,7 +110,10 @@ def test_gateway_accepts_valid_request_and_records_event():
 def test_gateway_blocks_position_limit_before_order_book():
     service = ExchangeService()
 
-    result = service.place_order("BUY", 10000, 101, "Trader_1", symbol="AAPL", venue="VENUE_1")
+    async def run():
+        return await service.place_order("BUY", 10000, 101, "Trader_1", symbol="AAPL", venue="VENUE_1")
+
+    result = _run(run())
 
     assert result["status"] == "REJECTED"
     assert result["reason"] == "position limit would be exceeded"
@@ -118,7 +139,7 @@ def test_score_traders_applies_delta_penalty():
 
     scores = service.score_traders()
 
-    assert scores[0]["raw_pnl"] == 5000
+    assert scores[0]["realized_pnl"] == 5000
     assert scores[0]["delta_exposure"] == 10
     assert scores[0]["liquidation_penalty"] == 1300
     assert scores[0]["adjusted_score"] == 3700
@@ -165,6 +186,11 @@ def test_service_can_be_created_from_config_file(tmp_path):
 
     service = create_exchange_from_config(config_path)
 
+    async def run():
+        return await service.place_order("BUY", 5000, 1, "Trader_1", symbol="ABC", venue="SIM")
+
+    result = _run(run())
+
     assert service.config.tournament_id == "from-file"
-    assert service.place_order("BUY", 5000, 1, "Trader_1", symbol="ABC", venue="SIM")["status"] == "PROCESSED"
+    assert result["status"] == "PROCESSED"
     assert load_tournament_config(config_path).tournament_id == "from-file"
