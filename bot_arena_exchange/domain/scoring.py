@@ -8,7 +8,7 @@ from bot_arena_exchange.domain.tournament import TraderAccount
 @dataclass(frozen=True)
 class ScoreResult:
     trader_id: str
-    raw_pnl: int
+    realized_pnl: int
     delta_exposure: int
     liquidation_penalty: int
     adjusted_score: int
@@ -49,7 +49,7 @@ def score_account(
             )
     return ScoreResult(
         trader_id=account.trader_id,
-        raw_pnl=account.realized_pnl,
+        realized_pnl=account.realized_pnl,
         delta_exposure=delta_exposure,
         liquidation_penalty=penalty,
         adjusted_score=account.realized_pnl - penalty,

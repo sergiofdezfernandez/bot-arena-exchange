@@ -1,16 +1,17 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 
 @dataclass(frozen=True)
 class TournamentRulesConfig:
     duration_ticks: int
-    entry_deadline_seconds_before_start: int
-    minimum_participants: int
+    duration_seconds: int = 0
+    entry_deadline_seconds_before_start: int = 3600
+    minimum_participants: int = 2
 
 
 @dataclass(frozen=True)
@@ -57,6 +58,21 @@ class RegimeConfig:
 
 
 @dataclass(frozen=True)
+class LiquidityBotsConfig:
+    enabled: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class TradingBotsConfig:
+    enabled: List[str] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class BotRegistryConfig:
+    registry: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class TournamentConfig:
     tournament_id: str
     rules: TournamentRulesConfig
@@ -64,9 +80,16 @@ class TournamentConfig:
     markets: List[MarketConfig]
     venues: List[VenueConfig]
     regimes: List[RegimeConfig]
+    system_account_ids: List[str] = field(default_factory=list)
+    liquidity_bots: LiquidityBotsConfig = field(default_factory=LiquidityBotsConfig)
+    trading_bots: TradingBotsConfig = field(default_factory=TradingBotsConfig)
+    bot_registry: BotRegistryConfig = field(default_factory=BotRegistryConfig)
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "TournamentConfig":
+        liquidity_bots_data = data.get("liquidity_bots", {})
+        trading_bots_data = data.get("trading_bots", {})
+        bot_registry_data = data.get("bot_registry", {})
         config = cls(
             tournament_id=str(data["tournament_id"]),
             rules=TournamentRulesConfig(**data["rules"]),
@@ -74,6 +97,10 @@ class TournamentConfig:
             markets=[MarketConfig(**market) for market in data["markets"]],
             venues=[VenueConfig(**venue) for venue in data["venues"]],
             regimes=[RegimeConfig(**regime) for regime in data["regimes"]],
+            system_account_ids=data.get("system_account_ids", []),
+            liquidity_bots=LiquidityBotsConfig(**liquidity_bots_data) if liquidity_bots_data else LiquidityBotsConfig(),
+            trading_bots=TradingBotsConfig(**trading_bots_data) if trading_bots_data else TradingBotsConfig(),
+            bot_registry=BotRegistryConfig(registry=bot_registry_data) if "bot_registry" in data else BotRegistryConfig(),
         )
         config.validate()
         return config

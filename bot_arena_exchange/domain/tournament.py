@@ -1,5 +1,6 @@
+import asyncio
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 from fractions import Fraction
 
 
@@ -12,16 +13,34 @@ class TraderAccount:
     realized_pnl: int = 0  # Accumulated realized PnL in minor currency units (e.g., cents)
     fees_paid: int = 0
     status: str = "ACTIVE"  # Account state: "ACTIVE" or "DISCONNECTED"
+    is_system: bool = False  # System accounts bypass risk limits and are excluded from leaderboards
 
 class TournamentManager:
-    def __init__(self, position_limit: int = 100):
+    def __init__(self, position_limit: int = 100, system_account_ids: Optional[Set[str]] = None):
         self.accounts: Dict[str, TraderAccount] = {}
         self.position_limit = position_limit
+        self.system_account_ids: Set[str] = system_account_ids or set()
+        self._lock = asyncio.Lock()
 
     def get_account(self, trader_id: str) -> TraderAccount:
         if trader_id not in self.accounts:
-            self.accounts[trader_id] = TraderAccount(trader_id=trader_id)
+            account = TraderAccount(trader_id=trader_id)
+            account.is_system = trader_id in self.system_account_ids
+            self.accounts[trader_id] = account
         return self.accounts[trader_id]
+
+    def disconnect_account(self, trader_id: str, reason: str = "") -> dict:
+        """Force-disconnect an account (e.g. for wash trading violation)."""
+        account = self.get_account(trader_id)
+        account.status = "DISCONNECTED"
+        return {
+            "event": "DISCONNECTION",
+            "trader_id": trader_id,
+            "reason": reason,
+            "symbol": "N/A",
+            "breached_quantity": 0,
+            "limit": 0,
+        }
 
     def _update_position(self, account: TraderAccount, symbol: str, trade_qty: int, price: int, fee: int = 0) -> Optional[dict]:
         """
@@ -30,8 +49,8 @@ class TournamentManager:
         
         trade_qty must be positive for buy executions and negative for sell executions.
         """
-        if account.status == "DISCONNECTED":
-            return None  # Rejects activity for disqualified accounts
+        if account.status == "DISCONNECTED" and not account.is_system:
+            return None  # Rejects activity for disqualified accounts (system accounts are never blocked)
 
         current_qty = account.positions.get(symbol, 0)
         current_cost_total: Fraction = account.cost_basis_total.get(symbol, Fraction(0))
@@ -83,10 +102,9 @@ class TournamentManager:
 
         account.positions[symbol] = new_qty
         account.fees_paid += fee
-        account.realized_pnl -= fee
 
-        # Hard risk limit verification
-        if abs(new_qty) > self.position_limit:
+        # Hard risk limit verification (bypassed for system accounts)
+        if not account.is_system and abs(new_qty) > self.position_limit:
             account.status = "DISCONNECTED"
             return {
                 "event": "DISCONNECTION",

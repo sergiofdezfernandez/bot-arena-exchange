@@ -1,5 +1,27 @@
 {
   "tournament_id": "default-phase-0",
+  "system_account_ids": [
+    "Bot_Random_1",
+    "Bot_Random_2",
+    "Bot_MeanRev",
+    "Bot_Trend",
+    "Bot_LaggingMM",
+    "Bot_InstTrend",
+    "Bot_Noise",
+    "Bot_LaggingMM5",
+    "Bot_SlowMR",
+    "Bot_Spoofer",
+    "Bot_MM_V1_Alpha",
+    "Bot_MM_V1_Beta",
+    "Bot_HFT_V1_Alpha",
+    "Bot_HFT_V1_Beta",
+    "Bot_StatArb_1",
+    "Bot_StatArb_2",
+    "Bot_StatArb_3",
+    "Bot_StatArb_4",
+    "Bot_MM_V2_Alpha",
+    "Bot_MM_V2_Beta"
+  ],
   "rules": {
     "duration_ticks": 1000,
     "entry_deadline_seconds_before_start": 3600,
@@ -21,8 +43,8 @@
   "venues": [
     {
       "venue_id": "VENUE_1",
-      "fee_bps": 10,
-      "spread_bps": 20,
+      "fee_bps": 0,
+      "spread_bps": 10,
       "latency_ticks": 0,
       "supported_symbols": ["AAPL"]
     },
@@ -34,6 +56,58 @@
       "supported_symbols": ["AAPL"]
     }
   ],
+  "bot_registry": {
+    "Bot_Random_1":     {"class": "RandomTrader",           "base_intensity": 0.08},
+    "Bot_Random_2":     {"class": "RandomTrader",           "base_intensity": 0.08},
+    "Bot_MeanRev":      {"class": "MeanRevertingTrader",    "base_intensity": 0.3},
+    "Bot_Trend":        {"class": "TrendBot",               "base_intensity": 0.2},
+    "Bot_LaggingMM":    {"class": "LaggingMarketMakerBot",  "base_intensity": 0.5},
+    "Bot_Apex":         {"class": "SpatialArbitrageBot",    "base_intensity": 0.3},
+    "Bot_InstTrend":    {"class": "InstitutionalTrendBot",  "base_intensity": 0.15},
+    "Bot_Noise":        {"class": "RetailNoiseTraderBot",   "base_intensity": 0.05},
+    "Bot_LaggingMM5":   {"class": "StochasticLaggingMMBot", "base_intensity": 0.6},
+    "Bot_SlowMR":       {"class": "SlowMeanReverterBot",    "base_intensity": 0.1},
+    "Bot_Spoofer":      {"class": "PhantomSpooferBot",      "base_intensity": 0.15},
+    "Bot_MM_V1_Alpha":  {"class": "MarketMakerBot",         "base_intensity": 1.5},
+    "Bot_MM_V1_Beta":   {"class": "MarketMakerBot",         "base_intensity": 1.5},
+    "Bot_HFT_V1_Alpha": {"class": "HftMarketMakerBot",      "base_intensity": 8.0},
+    "Bot_HFT_V1_Beta":  {"class": "HftMarketMakerBot",      "base_intensity": 8.0},
+    "Bot_StatArb_1":    {"class": "StatArbBot",             "base_intensity": 2.0},
+    "Bot_StatArb_2":    {"class": "StatArbBot",             "base_intensity": 2.0},
+    "Bot_StatArb_3":    {"class": "StatArbBot",             "base_intensity": 2.0},
+    "Bot_StatArb_4":    {"class": "StatArbBot",             "base_intensity": 2.0},
+    "Bot_MM_V2_Alpha":  {"class": "MarketMakerBot",         "base_intensity": 0.8},
+    "Bot_MM_V2_Beta":   {"class": "MarketMakerBot",         "base_intensity": 0.8}
+  },
+  "liquidity_bots": {
+    "enabled": [
+      "Bot_Random_1",
+      "Bot_Random_2",
+      "Bot_MeanRev",
+      "Bot_Trend",
+      "Bot_LaggingMM",
+      "Bot_InstTrend",
+      "Bot_Noise",
+      "Bot_LaggingMM5",
+      "Bot_Spoofer",
+      "Bot_MM_V1_Alpha",
+      "Bot_MM_V1_Beta",
+      "Bot_HFT_V1_Alpha",
+      "Bot_HFT_V1_Beta",
+      "Bot_StatArb_1",
+      "Bot_StatArb_2",
+      "Bot_StatArb_3",
+      "Bot_StatArb_4",
+      "Bot_MM_V2_Alpha",
+      "Bot_MM_V2_Beta"
+    ]
+  },
+  "trading_bots": {
+    "enabled": [
+  
+      
+    ]
+  },
   "regimes": [
     {
       "name": "sideways",
