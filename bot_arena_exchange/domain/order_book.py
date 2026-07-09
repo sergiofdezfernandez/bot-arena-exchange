@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import heapq
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
@@ -24,8 +25,23 @@ class Order:
         self.remaining = self.quantity
 
 
+class WashTradeError(Exception):
+    """Raised when an incoming order would cross a resting order from the same trader.
+
+    Callers must catch this and decide how to handle it based on account type:
+    - System accounts: log warning, reject order (no disconnection)
+    - User accounts: reject order + disconnect for wash trading violation
+    """
+
+    def __init__(self, trader_id: str) -> None:
+        self.trader_id = trader_id
+        super().__init__(f"Self-matching blocked for trader '{trader_id}'")
+
+
 class OrderBook:
-    def __init__(self) -> None:
+    def __init__(self, self_matching_banned: bool = True, venue: str = "UNKNOWN") -> None:
+        self.self_matching_banned = self_matching_banned
+        self.venue = venue
         self.bids: Dict[int, Deque[Order]] = defaultdict(deque)
         self.asks: Dict[int, Deque[Order]] = defaultdict(deque)
         # Open quantity per price level. A key is present only while its
@@ -43,10 +59,11 @@ class OrderBook:
         self.trades: List[Dict[str, object]] = []
         self._order_sequence = 0
         self._timestamp_sequence = 0
+        self._lock = asyncio.Lock()
 
     def _next_id(self, side: str) -> str:
         self._order_sequence += 1
-        return f"{side.lower()}-{self._order_sequence:06d}"
+        return f"{self.venue}-{side.lower()}-{self._order_sequence:06d}"
 
     def _next_timestamp(self) -> int:
         self._timestamp_sequence += 1
@@ -137,6 +154,14 @@ class OrderBook:
                 continue
 
             resting = queue[0]
+
+            # ── Self-Match Prevention ("Cancel Newest" SMP) ─────────────
+            # If the incoming order would cross a resting order from the same
+            # trader, halt matching immediately — do not execute, do not
+            # insert into the book. The caller must handle WashTradeError.
+            if self.self_matching_banned and incoming.trader_id == resting.trader_id:
+                raise WashTradeError(incoming.trader_id)
+
             trade_quantity = min(incoming.remaining, resting.remaining)
             incoming.remaining -= trade_quantity
             resting.remaining -= trade_quantity
@@ -233,7 +258,16 @@ class OrderBook:
         )
         self.orders[order.order_id] = order
 
-        self._match(order)
+        try:
+            self._match(order)
+        except WashTradeError:
+            # "Cancel Newest" SMP: reject the incoming order entirely.
+            # Do not add it to the book — it never executed.
+            order.status = "cancelled"
+            order.remaining = 0
+            # Re-raise so the caller (ExchangeService) can handle
+            # disconnection or warning as appropriate.
+            raise
 
         # Post-match handling of any unfilled quantity.
         if order.remaining > 0:
@@ -270,6 +304,22 @@ class OrderBook:
 
     def best_ask(self) -> Optional[int]:
         return self._best_price("SELL")
+
+    # ── Top-of-book (L1) volume queries for shock detection ──────────
+    def best_bid_volume(self) -> int:
+        """Return resting volume at the best bid level, or 0 if no bid."""
+        price = self._best_price("BUY")
+        return self.bid_open_qty.get(price, 0) if price is not None else 0
+
+    def best_ask_volume(self) -> int:
+        """Return resting volume at the best ask level, or 0 if no ask."""
+        price = self._best_price("SELL")
+        return self.ask_open_qty.get(price, 0) if price is not None else 0
+
+    def total_volume(self, side: str) -> int:
+        """Total open quantity across all price levels on one side."""
+        open_qty = self._open_qty_book(side)
+        return sum(open_qty.values())
 
     def get_order_status(self, order_id: str) -> Optional[str]:
         """Lets a trader check whether their order is open, filled, or cancelled."""
