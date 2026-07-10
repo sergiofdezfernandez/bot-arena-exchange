@@ -1,5 +1,7 @@
 import random
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class InstitutionalTrendBot:
     """Institutional trend follower that operates aggressively on VENUE_1.
@@ -24,7 +26,7 @@ class InstitutionalTrendBot:
         self.active_order_id = None
 
         # ── Probabilities ──────────────────────────────────────────────
-        self.aggression_chance = 0.3    # 20% per tick chance of firing an aggressive order
+        self.aggression_chance = 0.02   # 1% per tick chance of firing an aggressive order
 
     def _cancel_existing_order(self, api):
         """Cancel the active order if one exists."""
@@ -84,7 +86,7 @@ class InstitutionalTrendBot:
         if random.random() >= self.aggression_chance:
             return
 
-        order_size = random.randint(10, 45)
+        order_size = generate_pareto_size(base_size=150, alpha=1.8, max_limit=5000)
 
         if self.current_phase == "BULL":
             # Bull phase: aggressive buy crossing the spread

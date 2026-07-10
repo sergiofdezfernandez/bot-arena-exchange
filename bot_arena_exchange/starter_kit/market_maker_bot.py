@@ -1,5 +1,7 @@
 import math
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class MarketMakerBot:
     def __init__(self):
@@ -8,14 +10,13 @@ class MarketMakerBot:
         self.bid_order_id = None
         self.ask_order_id = None
         self.base_spread = 4
-        self.order_size = 100
         self.max_position = 2000
 
         # Restocking fallback: track last known fair value when book empties
         self.last_fair_value = 10000
 
         # Inventory risk aversion: maximum ticks to shift price for inventory management
-        self.inventory_risk_aversion = 15
+        self.inventory_risk_aversion = 6
 
         # OFI (Order Flow Imbalance) tracking for adverse selection protection
         self.prev_bid_price = None
@@ -28,7 +29,7 @@ class MarketMakerBot:
 
         # Trade Impact (Adverse Selection) — shifts fair value based on public
         # order flow to reduce bid-ask bounce from rigid quoting.
-        self.trade_impact_factor = 0.2  # Increased from 0.05 (100 shares now moves fair value by 20 ticks)
+        self.trade_impact_factor = 0.05  # Increased from 0.05 (100 shares now moves fair value by 20 ticks)
         self.last_processed_trade_timestamp = 0  # Cursor for deduplication
 
     def _cancel_existing_quotes(self, api):
@@ -208,11 +209,13 @@ class MarketMakerBot:
         if best_ask is None:
             ask_price = int(self.last_fair_value) + 5
 
-        # Dynamic sizing: reduce quoted size when near capacity limits (>80%)
+        # Dynamic sizing: Pareto base with capacity factor
+        pareto_base = generate_pareto_size(base_size=100, alpha=3.0, max_limit=400)
         current_capacity = abs(self.position) / self.max_position
-        dynamic_size = self.order_size
         if current_capacity > 0.8:
-            dynamic_size = max(1, int(self.order_size * 0.2))  # Quote only 20% size when near limits
+            dynamic_size = max(1, int(pareto_base * 0.2))  # Quote only 20% size when near limits
+        else:
+            dynamic_size = pareto_base
 
         # 4. Send orders to the Gateway following the API format
         bid_res = api.place_order(

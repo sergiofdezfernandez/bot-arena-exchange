@@ -1,5 +1,7 @@
 import math
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class HftMarketMakerBot:
     """High-frequency market maker with inventory skewing on VENUE_1.
@@ -20,7 +22,6 @@ class HftMarketMakerBot:
         # ── Risk parameters ───────────────────────────────────────────
         self.max_inventory = 1000       # Absolute position limit
         self.base_spread = 2             # Base spread in pips
-        self.order_size = 50             # Size per order
 
         # ── Active order tracking ──────────────────────────────────────
         self.bid_order_id = None
@@ -30,7 +31,7 @@ class HftMarketMakerBot:
         self.last_fair_value = 10000
 
         # ── Inventory risk aversion: maximum ticks to shift price ──────
-        self.inventory_risk_aversion = 15
+        self.inventory_risk_aversion = 20
 
         # ── OFI (Order Flow Imbalance) tracking ────────────────────────
         self.prev_bid_price = None
@@ -42,7 +43,7 @@ class HftMarketMakerBot:
         self.ofi_sensitivity = 0.1       # Cents to adjust per unit of OFI
 
         # ── Trade Impact (Adverse Selection) ───────────────────────────
-        self.trade_impact_factor = 0.2  # Increased from 0.05 (100 shares now moves fair value by 20 ticks)
+        self.trade_impact_factor = 0.05  # Increased from 0.05 (100 shares now moves fair value by 20 ticks)
         self.last_processed_trade_timestamp = 0  # Cursor for deduplication
 
     def _cancel_existing_quotes(self, api):
@@ -232,11 +233,13 @@ class HftMarketMakerBot:
         if best_ask is None:
             ask_price = int(self.last_fair_value) + 5
 
-        # Dynamic sizing: reduce quoted size when near capacity limits (>80%)
+        # Dynamic sizing: Pareto base with capacity factor
+        pareto_base = generate_pareto_size(base_size=100, alpha=3.0, max_limit=400)
         current_capacity = abs(self.position) / self.max_inventory
-        dynamic_size = self.order_size
         if current_capacity > 0.8:
-            dynamic_size = max(1, int(self.order_size * 0.2))  # Quote only 20% size when near limits
+            dynamic_size = max(1, int(pareto_base * 0.2))  # Quote only 20% size when near limits
+        else:
+            dynamic_size = pareto_base
 
         # 5. Place quotes on VENUE_1
         bid_res = api.place_order(

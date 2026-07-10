@@ -1,6 +1,8 @@
 import collections
 import random
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class LaggingMarketMakerBot:
     """Market maker that operates on VENUE_2 with an artificial delay of 15 ticks.
@@ -29,7 +31,6 @@ class LaggingMarketMakerBot:
 
         # ── Market-making parameters ─────────────────────────────────────
         self.base_spread = 4                             # Spread in pips
-        self.order_size = 2                              # Size per order
         self.max_position = 20                           # Inventory limit
 
         # ── Active order control ─────────────────────────────────────────
@@ -191,17 +192,18 @@ class LaggingMarketMakerBot:
                 ask_price = ask_price + self.base_spread * 2
 
             # 8. Place orders on VENUE_2
+            qty = generate_pareto_size(base_size=100, alpha=3.0, max_limit=400)
             bid_res = api.place_order(
                 side="BUY",
                 price=int(bid_price),
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue=self.venue,
             )
             ask_res = api.place_order(
                 side="SELL",
                 price=int(ask_price),
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue=self.venue,
             )

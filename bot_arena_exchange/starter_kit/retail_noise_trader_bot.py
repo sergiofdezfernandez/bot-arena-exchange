@@ -1,5 +1,7 @@
 import random
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class RetailNoiseTraderBot:
     """Retail noise trader that generates random passive/aggressive orders on VENUE_1.
@@ -86,7 +88,7 @@ class RetailNoiseTraderBot:
 
         # 4. Randomly choose side and size
         side = random.choice(["BUY", "SELL"])
-        quantity = random.randint(1, 2)
+        quantity = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
 
         # 5. Choose passive vs slightly aggressive (50/50)
         is_aggressive = random.random() < 0.5

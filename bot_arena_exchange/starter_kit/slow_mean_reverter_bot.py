@@ -1,3 +1,6 @@
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
+
 class SlowMeanReverterBot:
     """Cross-venue mean-reversion arbitrage bot with cooldown.
 
@@ -26,7 +29,6 @@ class SlowMeanReverterBot:
         self.profit_threshold = 5        # Minimum net profit in pips to act
         self.cooldown = 0                # Remaining cooldown ticks
         self.cooldown_duration = 5       # Ticks to wait after each trade
-        self.order_size = 4              # Size per leg
 
         # ── Active order tracking ──────────────────────────────────────
         self.bid_order_id = None
@@ -115,17 +117,18 @@ class SlowMeanReverterBot:
         # 4. Execute the best opportunity if it exceeds the threshold
         if net_profit_a >= self.profit_threshold and net_profit_a >= net_profit_b:
             # Arbitrage A: buy cheap on V2, sell expensive on V1
+            qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
             bid_res = api.place_order(
                 side="BUY",
                 price=best_ask_v2,
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue="VENUE_2",
             )
             ask_res = api.place_order(
                 side="SELL",
                 price=best_bid_v1,
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue="VENUE_1",
             )
@@ -135,17 +138,18 @@ class SlowMeanReverterBot:
 
         elif net_profit_b >= self.profit_threshold:
             # Arbitrage B: buy cheap on V1, sell expensive on V2
+            qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
             bid_res = api.place_order(
                 side="BUY",
                 price=best_ask_v1,
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue="VENUE_1",
             )
             ask_res = api.place_order(
                 side="SELL",
                 price=best_bid_v2,
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue="VENUE_2",
             )

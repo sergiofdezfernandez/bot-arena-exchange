@@ -1,5 +1,7 @@
 import random
 
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 
 class TrendBot:
     """Bot that alternates between UP and DOWN phases, creating directional trends.
@@ -26,7 +28,6 @@ class TrendBot:
 
         # ── Active order control ─────────────────────────────────────────
         self.current_order_id = None
-        self.order_size = 10            # Moderate size to push without breaking
 
     def _cancel_existing_order(self, api):
         """Cancel any existing order to make room for a fresh one."""
@@ -106,10 +107,11 @@ class TrendBot:
             price = max(1, price)
 
             # 5. Place the order on VENUE_1
+            qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
             res = api.place_order(
                 side=side,
                 price=int(price),
-                quantity=self.order_size,
+                quantity=qty,
                 symbol=self.symbol,
                 venue=self.venue,
             )

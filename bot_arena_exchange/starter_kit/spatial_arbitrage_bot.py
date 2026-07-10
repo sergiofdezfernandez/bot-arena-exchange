@@ -1,3 +1,5 @@
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 """Spatial Arbitrage Apex Predator — OFI-Sniper Edition.
 
 This bot operates as a state machine with multiple exploitation strategies:
@@ -47,8 +49,6 @@ class SpatialArbitrageBot:
 
         # ── Configuration ─────────────────────────────────────────────────
         self.spoof_size = 15  # Fake order to move VENUE_1 mid-price (reduced from 50 to avoid toxic flow)
-        self.arb_size = 2  # Real arbitrage leg size
-        self.order_size = 2  # Shares per OFI-triggered snipe
         self.lag_window = 15  # Match LaggingMM's deque maxlen
         self.fee_v1_bps = 0  # VENUE_1: 0 bps
         self.fee_v2_bps = 15  # VENUE_2: 15 bps
@@ -67,7 +67,7 @@ class SpatialArbitrageBot:
         self.max_position = 20  # Maximum absolute position before blocking new snipes
 
         # ── Inventory unloading ───────────────────────────────────────────
-        self.inventory_unload_qty = 2  # Size to unwind per tick during mean reversion
+        self.inventory_unload_qty = 2  # (deprecated — Pareto-generated per tick)
 
         # ── Inventory tracking ────────────────────────────────────────────
         self.position = 0  # Current position in self.symbol (updated each tick)
@@ -321,7 +321,7 @@ class SpatialArbitrageBot:
                 res = api.place_order(
                     side="BUY",
                     price=best_ask_v2,
-                    quantity=self.order_size,
+                    quantity=generate_pareto_size(base_size=10, alpha=2.5, max_limit=200),
                     symbol=self.symbol,
                     venue="VENUE_2",
                 )
@@ -336,7 +336,7 @@ class SpatialArbitrageBot:
                 res = api.place_order(
                     side="SELL",
                     price=best_bid_v2,
-                    quantity=self.order_size,
+                    quantity=generate_pareto_size(base_size=10, alpha=2.5, max_limit=200),
                     symbol=self.symbol,
                     venue="VENUE_2",
                 )
@@ -384,7 +384,8 @@ class SpatialArbitrageBot:
         if self.position > 0:
             # Long position → Penny the ask (sell 1 tick cheaper than MMs) if spread > 1
             unload_price = best_ask_v1 - 1 if spread_v1 > 1 else best_ask_v1
-            qty = min(self.inventory_unload_qty, self.position)
+            unwind_qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
+            qty = min(unwind_qty, self.position)
             res = api.place_order(
                 side="SELL",
                 price=unload_price,
@@ -399,7 +400,8 @@ class SpatialArbitrageBot:
         elif self.position < 0:
             # Short position → Penny the bid (buy 1 tick higher than MMs) if spread > 1
             unload_price = best_bid_v1 + 1 if spread_v1 > 1 else best_bid_v1
-            qty = min(self.inventory_unload_qty, abs(self.position))
+            unwind_qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
+            qty = min(unwind_qty, abs(self.position))
             res = api.place_order(
                 side="BUY",
                 price=unload_price,
@@ -491,7 +493,7 @@ class SpatialArbitrageBot:
             dump_res = api.place_order(
                 side="SELL",
                 price=best_bid_v2,
-                quantity=self.arb_size,
+                quantity=generate_pareto_size(base_size=10, alpha=2.5, max_limit=200),
                 symbol=self.symbol,
                 venue="VENUE_2",
             )
@@ -537,7 +539,7 @@ class SpatialArbitrageBot:
         best_bid_v1, best_ask_v1 = self._extract_best_prices(book_v1)
         best_bid_v2, best_ask_v2 = self._extract_best_prices(book_v2)
 
-        dump_qty = 5  # Shares to dump per tick
+        dump_qty = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
 
         if self.position > 0:
             # Need to SELL — pick the venue with the highest bid

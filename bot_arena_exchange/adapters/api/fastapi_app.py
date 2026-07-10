@@ -90,7 +90,6 @@ def _build_bot_registry_and_factories():
         # Designed to be resilient but not provide the same massive depth as VENUE_1
         if "V2" in tid:
             bot.venue = "VENUE_2"
-            bot.order_size = 20              # 5x smaller than V1 (100)
             bot.max_position = 500           # 4x smaller than V1 (2000)
             bot.inventory_risk_aversion = 30 # 2x more risk averse than V1 (15)
         else:

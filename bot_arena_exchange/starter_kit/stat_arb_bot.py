@@ -1,3 +1,5 @@
+from bot_arena_exchange.domain.bots import generate_pareto_size
+
 """Statistical Arbitrage Bot — Passive Maker-Taker Arbitrage.
 
 Monitors mid-price divergence between VENUE_1 and VENUE_2. When the
@@ -21,7 +23,6 @@ class StatArbBot:
 
         # ── Configuration ─────────────────────────────────────────────────
         self.max_position = 1000   # Absolute position limit per side
-        self.order_size = 50       # Passive order size
         self.arb_threshold = 3.0   # Ticks of mid-price divergence to activate
 
         # ── Order tracking for both venues ────────────────────────────────
@@ -141,7 +142,7 @@ class StatArbBot:
                     v2_res = api.place_order(
                         side="BUY",
                         price=passive_buy_price,
-                        quantity=self.order_size,
+                        quantity=generate_pareto_size(base_size=100, alpha=3.0, max_limit=400),
                         symbol=self.symbol,
                         venue="VENUE_2",
                     )
@@ -155,7 +156,7 @@ class StatArbBot:
                     v1_res = api.place_order(
                         side="SELL",
                         price=passive_sell_price,
-                        quantity=self.order_size,
+                        quantity=generate_pareto_size(base_size=100, alpha=3.0, max_limit=400),
                         symbol=self.symbol,
                         venue="VENUE_1",
                     )
@@ -176,7 +177,7 @@ class StatArbBot:
                     v1_res = api.place_order(
                         side="BUY",
                         price=passive_buy_price,
-                        quantity=self.order_size,
+                        quantity=generate_pareto_size(base_size=100, alpha=3.0, max_limit=400),
                         symbol=self.symbol,
                         venue="VENUE_1",
                     )
@@ -190,7 +191,7 @@ class StatArbBot:
                     v2_res = api.place_order(
                         side="SELL",
                         price=passive_sell_price,
-                        quantity=self.order_size,
+                        quantity=generate_pareto_size(base_size=100, alpha=3.0, max_limit=400),
                         symbol=self.symbol,
                         venue="VENUE_2",
                     )
