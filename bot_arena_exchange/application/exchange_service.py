@@ -18,9 +18,9 @@ SHOCK_VOLUME_THRESHOLD = 0.50
 # Liquidity Shock (Trigger B): best-level volume drops > 50% from cancellation
 SHOCK_LIQUIDITY_THRESHOLD = 0.50
 # Hawkes jump scaling: alpha(V) = K_ALPHA * V
-K_ALPHA = 0.008
+K_ALPHA = 0.004
 # Hawkes decay scaling: beta(V) = K_BETA / (1 + V / V_REF)
-K_BETA = 20.0
+K_BETA = 2.5
 V_REF = 100
 
 
@@ -37,6 +37,9 @@ def _shock_params(volume: int) -> tuple:
     """Compute Hawkes alpha and beta from a shock volume V."""
     alpha = K_ALPHA * volume
     beta = K_BETA / (1.0 + volume / V_REF)
+    if alpha >= beta:
+        # Ensure alpha < beta for stability of Hawkes process
+        alpha = beta * 0.85
     return alpha, beta
 
 
