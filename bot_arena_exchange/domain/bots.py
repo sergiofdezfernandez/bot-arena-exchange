@@ -2,6 +2,18 @@ import random
 from typing import Optional
 
 
+def generate_pareto_size(base_size: int, alpha: float, max_limit: int = 5000) -> int:
+    """
+    Generates heavy-tailed order sizes using a Pareto distribution.
+    - base_size: The minimum order size floor.
+    - alpha: Tail index (lower = fatter tails, more institutional whales).
+    - max_limit: Hard cap to protect matching engine and position boundaries.
+    """
+    sample = random.paretovariate(alpha)
+    calculated_size = int(base_size * sample)
+    return min(calculated_size, max_limit)
+
+
 class SimpleMarketMaker:
     def __init__(self, trader_id: str, symbol: str, venue: str, edge: int = 2, size: int = 25):
         self.trader_id = trader_id
@@ -16,10 +28,11 @@ class SimpleMarketMaker:
         """
         bid_price = current_price - self.edge
         ask_price = current_price + self.edge
+        qty = generate_pareto_size(base_size=100, alpha=3.0, max_limit=400)
 
         return [
-            {"side": "BUY", "price": bid_price, "quantity": self.size},
-            {"side": "SELL", "price": ask_price, "quantity": self.size}
+            {"side": "BUY", "price": bid_price, "quantity": qty},
+            {"side": "SELL", "price": ask_price, "quantity": qty}
         ]
 class RandomTrader:
     def __init__(self, trader_id: str, symbol: str = "AAPL", venue: str = "VENUE_1"):
@@ -55,7 +68,7 @@ class RandomTrader:
                 mid = (best_bid + best_ask) // 2
                 price = mid + (1 if side == "BUY" else -1)
 
-        quantity = random.randint(10,100)
+        quantity = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
         return {"side": side, "price": price, "quantity": quantity}
 
 class MeanRevertingTrader:
@@ -90,5 +103,5 @@ class MeanRevertingTrader:
         else:
             return None  # No action if within the mean range
 
-        quantity = random.randint(25,100) 
-        return {"side": side, "price": price, "quantity": quantity} 
+        quantity = generate_pareto_size(base_size=10, alpha=2.5, max_limit=200)
+        return {"side": side, "price": price, "quantity": quantity}
